@@ -1,0 +1,26 @@
+KICKOFF PROMPTS — sent in parallel via `maestri ask --batch` after recruiting
+the 3 agents (Bedrock = backend, Prism = frontend, Lattice = integration/docs).
+
+--- Bedrock (Backend) ---
+Start now. Read CLAUDE.md, docs/API-CONTRACT.md, docs/ROADMAP.md (Agent 1 brief),
+CONTEXT.md, docs/adr/ in the project root, then build the backend/ per your role.
+Reminder: contract is FROZEN, any ambiguity -> grill-with-docs, do not decide
+unilaterally. When done, reply with a CONCISE summary: files created, how to run +
+test, coverage %, and any assumptions.
+
+--- Prism (Frontend) ---
+Start now. Read CLAUDE.md, docs/API-CONTRACT.md, docs/ROADMAP.md (Agent 2 brief),
+CONTEXT.md, docs/adr/0002 in the project root, then build the frontend/ per your
+role. Reminder: contract is FROZEN, backend-authoritative accumulator (no client
+math/precedence), any ambiguity -> grill-with-docs. When done, reply with a CONCISE
+summary: files created, how to run + test, coverage %, and any assumptions.
+
+--- Lattice (Integration & Docs) ---
+Start drafting now but DO NOT finalize. Read CLAUDE.md, docs/API-CONTRACT.md,
+docs/ROADMAP.md (Agent 3 brief), docs/adr/. Draft the docker-compose.yml, nginx
+expectations, and README.md skeleton (sections: setup, run local, run via docker,
+API curl examples per op + errors from the contract, design decisions from ADRs,
+tests+coverage). Backend (Bedrock) and Frontend (Prism) are building in parallel —
+you can ask them via maestri ask for exact run/test commands. Finalize + run the
+integration smoke test only AFTER both land. Reply with a CONCISE status of what
+you drafted and what you are waiting on.

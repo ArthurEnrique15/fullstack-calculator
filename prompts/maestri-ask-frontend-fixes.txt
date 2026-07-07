@@ -1,0 +1,23 @@
+maestri ask "Prism" (frontend fixes, sent after initial build):
+
+Two frontend fixes needed. Keep 100% coverage (add tests for new behavior),
+contract still frozen, accumulator model unchanged.
+
+1) KEYBOARD SUPPORT — currently only mouse clicks work; keyboard does nothing.
+Add full keyboard input, routed through the SAME handlers as the buttons (no
+duplicate logic). Mapping: digits 0-9 and '.' -> digit entry; '+' '-' ->
+add/subtract; '*' or 'x' -> multiply; '/' -> divide; '^' -> power; '%' ->
+percentage; 'r' -> sqrt; Enter or '=' -> equals; Escape or 'c'/'C' -> AC/clear;
+Backspace -> delete last char if supported, else ignore. Use a window/document
+keydown listener in a useEffect (cleaned up on unmount); preventDefault where the
+key would otherwise do something. Optional: brief active-state on the matching
+button. Add Vitest+RTL tests: each key triggers the right action, Enter=equals
+fires a backend call, Escape clears, listener removed on unmount.
+
+2) REMOVE COPY — delete the user-facing texts 'backend-authoritative' and
+'left-to-right, one backend call per step' (and close paraphrases) from the
+FRONTEND only: on-screen UI text AND frontend/README.md. Do NOT touch docs/adr/
+or root docs. Just strip it from what a frontend user/reader sees.
+
+Reply CONCISE: files changed, keyboard mapping implemented, new test count,
+coverage % after.

@@ -1,0 +1,42 @@
+# Fullstack calculator — DRAFT (finalize after backend/frontend Dockerfiles land).
+#
+# `docker compose up` brings the full app up:
+#   - backend:  Go REST service, listens on :8080 inside the compose network.
+#   - frontend: Nginx serving the built React app; reverse-proxies /api -> backend:8080.
+#
+# Browser only ever talks to the frontend origin (single-origin per API contract).
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: fullstack-calculator-backend:local
+    container_name: calculator-backend
+    environment:
+      # Backend reads these; see backend/README for the full list.
+      PORT: "8080"
+      # CORS is a safety net; in-container traffic is same-origin via Nginx.
+      ALLOWED_ORIGIN: "http://localhost:8080"
+    expose:
+      - "8080"
+    # No HEALTHCHECK: backend image is distroless (no shell / wget / curl).
+    # Frontend depends_on: service_started; Nginx retries the upstream, so a
+    # brief 502 during warm-up is possible on the very first request.
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: fullstack-calculator-frontend:local
+    container_name: calculator-frontend
+    depends_on:
+      - backend
+    ports:
+      # Host:container. Change host side if 8080 is taken.
+      - "8080:80"
+    restart: unless-stopped
+
+# No named volumes: stateless app.
+# No custom network: default bridge is enough; services resolve each other by name.

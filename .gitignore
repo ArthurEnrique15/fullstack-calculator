@@ -1,0 +1,17 @@
+# Maestri workspace internals
+.maestri/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Coverage artifacts (regenerate via commands in README)
+coverage/
+backend/coverage.out
+backend/coverage.html
+
+# OS
+.DS_Store

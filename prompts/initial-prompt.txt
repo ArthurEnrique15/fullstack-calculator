@@ -1,0 +1,17 @@
+you will help me implement a task. here is the description:
+
+<pasted task description received in the email>
+
+here are some context and contraints:
+1. you are running in a maestri terminal. maestri has the maestro feature, using it you can recruit other terminal agents. you
+should use this to optimize the implementations and paralelize what we can.
+2. you will be responsible to draft the roadmap of the implementation and recruit and manage the implementing and design agents.
+you will not touch code, but will design the roadmap docs that other agents will use to implement.
+3. do not make arbitrary decisions. always use the skill grill-with-docs to discuss with me things that you are not sure or nee
+ddesign decisions.
+4. some implementation specifics must not be handled by you, this way we can maintain a controlled context window without the need
+of compact your context. the idea here is that we can finish the implementation without needing to compact your context.
+5. the usage of the grill-with-docs skill must be repassed to the other agents that you recruit.
+
+lets start. first of all, we must create a claude.md file with a base explanation of the workspace and constraints that i just
+passed in the prompt. after that, we must start the draft of the implementation roadmap.

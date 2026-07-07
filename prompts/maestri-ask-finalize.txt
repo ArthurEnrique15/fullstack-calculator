@@ -1,0 +1,18 @@
+maestri ask "Lattice" (finalize pass, sent after Backend + Frontend landed):
+
+Both layers have LANDED — finalize now. You are wired to Bedrock and Prism on
+the canvas. Backend facts from Bedrock: run `cd backend && go run .` (env PORT
+default 8080, ALLOWED_ORIGIN default *); tests+coverage `go test -race
+-coverpkg=./calculator,./handler -coverprofile=coverage.out ./... && go tool
+cover -html=coverage.out -o coverage.html` = 100%; backend Dockerfile multi-stage,
+exposes :8080; packages calculator/ + handler/ + main.go at backend root.
+Frontend facts from Prism: `cd frontend && npm install && npm run dev` (:5173),
+`npm test` (57 tests), `npm run test:coverage` = 100% lines/stmts/funcs (99.1%
+branch, threshold 95); frontend Dockerfile multi-stage node->nginx, nginx.conf
+serves SPA + proxies /api -> backend:8080. NOTE backend also uses :8080 internally
+— in docker-compose keep backend UNPUBLISHED to host (expose only), publish only
+the frontend. If genuinely ambiguous use grill-with-docs; else ask Bedrock/Prism
+directly. FINALIZE: `docker compose up --build`, run ./scripts/smoke.sh against
+the published frontend URL, verify both coverage reports render, swap real backend
+cmds into README, drop the DRAFT banner. Do NOT write to prompts/. Reply CONCISE:
+compose up result, smoke pass/fail counts, anything broken.
