@@ -1,0 +1,3 @@
+[Prompt sent from agent maestro to agent backend.]
+
+Start now. Read CLAUDE.md, docs/API-CONTRACT.md, docs/ROADMAP.md (Agent 1 brief), CONTEXT.md, docs/adr/ in the project root, then build the backend/ per your role. Reminder: contract is FROZEN, any ambiguity -> grill-with-docs, do not decide unilaterally. When done, reply with a CONCISE summary: files created, how to run + test, coverage %, and any assumptions.

@@ -1,3 +1,5 @@
+[Prompt sent from the user to agent maestro.]
+
 you will help me implement a task. here is the description:
 
 <pasted task description received in the email>

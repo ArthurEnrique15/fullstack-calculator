@@ -1,0 +1,3 @@
+[Prompt sent from agent maestro to agent integration-and-docs.]
+
+Start drafting now but DO NOT finalize. Read CLAUDE.md, docs/API-CONTRACT.md, docs/ROADMAP.md (Agent 3 brief), docs/adr/. Draft the docker-compose.yml, nginx expectations, and README.md skeleton (sections: setup, run local, run via docker, API curl examples per op + errors from the contract, design decisions from ADRs, tests+coverage). Backend (Bedrock) and Frontend (Prism) are building in parallel — you can ask them via maestri ask for exact run/test commands. Finalize + run the integration smoke test only AFTER both land. Reply with a CONCISE status of what you drafted and what you are waiting on.

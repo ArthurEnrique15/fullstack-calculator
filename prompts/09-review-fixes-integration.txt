@@ -1,0 +1,12 @@
+[Prompt sent from agent maestro to agent integration-and-docs.]
+
+Code-review fixes for integration/docs (do NOT touch CLAUDE.md or docs/ROADMAP.md — manager owns those). Apply: (1) MAJOR BUG — scripts/smoke.sh python3 fallback json_get never reads the response body (the here-doc IS stdin, so sys.stdin.read() gets the PY source, and line ~47 discards the body). Rewrite json_get to pipe the JSON via printf into python3 -c with the path as argv, e.g.: json_get() { printf %s "$1" | python3 -c 'import json,sys;
+... path=sys.argv[1].lstrip(".");
+try: data=json.loads(sys.stdin.read())
+except Exception: sys.exit(0)
+cur=data
+for p in path.split("."):
+  if not p: continue
+  if isinstance(cur,dict) and p in cur: cur=cur[p]
+  else: sys.exit(0)
+print(cur if not isinstance(cur,(dict,list)) else json.dumps(cur))' "$2"; }. Also add a self-test near the top: assert a request to a bogus URL / bogus op fails (non-zero / wrong code) so a broken extractor can never silently PASS. Then RUN the smoke test both ways if possible (with jq, and with jq forced unavailable) to prove the fallback works. (2) frontend/nginx.conf:~14 — change proxy_pass to http://backend:8080; (NO trailing /api/ URI) to match docs/NGINX-EXPECTATIONS.md (no path rewrite). (3) docker-compose.yml — delete the stale DRAFT header comment. (4) HOST PORT stays 8080 [manager decided keep] — add a one-line note in README warning not to run local `go run` backend and `docker compose up` at the same time (both use 8080). (5) README power/NON_FINITE_RESULT example uses b=1000 but the backend test uses b=400 — change the README example to b=400 to match. Re-verify: docker compose up --build + ./scripts/smoke.sh = all pass. Reply CONCISE: smoke pass/fail counts (both with and without jq), what changed.
