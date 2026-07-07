@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Calculator } from '../components/Calculator'
 import type { CalcClient } from '../api'
 import type { CalcResult, Operation } from '../types'
@@ -41,9 +41,7 @@ describe('useKeyboardControls', () => {
     key('+')
     key('3')
     key('Enter')
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(client.calculate).toHaveBeenCalledWith('add', 2, 3)
+    await waitFor(() => expect(client.calculate).toHaveBeenCalledWith('add', 2, 3))
   })
 
   it("'=' key also fires equals", async () => {
@@ -53,9 +51,7 @@ describe('useKeyboardControls', () => {
     key('+')
     key('2')
     key('=')
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(client.calculate).toHaveBeenCalledWith('add', 2, 2)
+    await waitFor(() => expect(client.calculate).toHaveBeenCalledWith('add', 2, 2))
   })
 
   it('Escape and c clear', () => {
@@ -93,9 +89,7 @@ describe('useKeyboardControls', () => {
     key(k)
     key('3')
     key('=')
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(client.calculate).toHaveBeenCalledWith(op, 5, 3)
+    await waitFor(() => expect(client.calculate).toHaveBeenCalledWith(op, 5, 3))
   })
 
   it.each(['x', 'X'])("'%s' also multiplies", async (k) => {
@@ -105,22 +99,19 @@ describe('useKeyboardControls', () => {
     key(k)
     key('3')
     key('=')
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(client.calculate).toHaveBeenCalledWith('multiply', 2, 3)
+    await waitFor(() => expect(client.calculate).toHaveBeenCalledWith('multiply', 2, 3))
   })
 
-  it("'r' triggers sqrt", async () => {
+  it("'r' and 'R' trigger sqrt", async () => {
     const client = stubClient(() => ({ ok: true, value: 3 }))
     render(<Calculator client={client} />)
     key('9')
     key('r')
-    await Promise.resolve()
-    expect(client.calculate).toHaveBeenCalledWith('sqrt', 9)
-    key('4')
+    await waitFor(() => expect(client.calculate).toHaveBeenCalledWith('sqrt', 9))
     key('R')
-    await Promise.resolve()
-    expect((client.calculate as ReturnType<typeof vi.fn>).mock.calls[1][0]).toBe('sqrt')
+    await waitFor(() =>
+      expect((client.calculate as ReturnType<typeof vi.fn>).mock.calls[1][0]).toBe('sqrt'),
+    )
   })
 
   it('ignores keys when a modifier is held', () => {
@@ -147,6 +138,26 @@ describe('useKeyboardControls', () => {
       prevented = !window.dispatchEvent(evt)
     })
     expect(prevented).toBe(true)
+  })
+
+  it('attaches the window listener exactly once, even across re-renders', () => {
+    const addSpy = vi.spyOn(window, 'addEventListener')
+    const removeSpy = vi.spyOn(window, 'removeEventListener')
+    const client = stubClient(() => ({ ok: true, value: 0 }))
+    const { unmount } = render(<Calculator client={client} />)
+
+    const keydownAddsBefore = addSpy.mock.calls.filter((c) => c[0] === 'keydown').length
+    expect(keydownAddsBefore).toBe(1)
+
+    // Drive many state updates — every keystroke re-renders <Calculator />.
+    for (let i = 0; i < 20; i++) key(String(i % 10))
+
+    const keydownAddsAfter = addSpy.mock.calls.filter((c) => c[0] === 'keydown').length
+    expect(keydownAddsAfter).toBe(1)
+
+    unmount()
+    const keydownRemoves = removeSpy.mock.calls.filter((c) => c[0] === 'keydown').length
+    expect(keydownRemoves).toBe(1)
   })
 
   it('removes the listener on unmount', () => {

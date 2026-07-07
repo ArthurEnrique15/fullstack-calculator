@@ -44,10 +44,10 @@ describe('api.calculate', () => {
     expect(JSON.parse(call[1].body)).toEqual({ operation: 'sqrt', a: 9 })
   })
 
-  it('defaults missing binary b to 0', async () => {
-    fetchMock.mockResolvedValue(mockResponse({ result: 5 }))
-    await calculate('add', 5)
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ operation: 'add', a: 5, b: 0 })
+  it('throws TypeError when a binary op is called without b', async () => {
+    await expect(calculate('add', 5)).rejects.toThrow(TypeError)
+    await expect(calculate('add', 5)).rejects.toThrow(/operand b required/i)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('maps 400 validation error into typed CalcResult', async () => {
@@ -76,14 +76,23 @@ describe('api.calculate', () => {
     }
   })
 
-  it('falls back to UNKNOWN for unrecognized error codes', async () => {
+  it('narrows unknown server codes (even client-only codes) to UNKNOWN', async () => {
+    // A code the backend has no business sending — must be treated as UNKNOWN.
     fetchMock.mockResolvedValue(
       mockResponse({ error: { code: 'MYSTERY', message: 'weird' } }, { status: 400 }),
     )
-    const res = await calculate('add', 1, 2)
+    let res = await calculate('add', 1, 2)
     if (res.ok) throw new Error('expected error')
     expect(res.code).toBe('UNKNOWN')
     expect(res.message).toBe('weird')
+
+    // Client-only codes must not be accepted from the server either.
+    fetchMock.mockResolvedValue(
+      mockResponse({ error: { code: 'NETWORK_ERROR', message: 'x' } }, { status: 400 }),
+    )
+    res = await calculate('add', 1, 2)
+    if (res.ok) throw new Error('expected error')
+    expect(res.code).toBe('UNKNOWN')
   })
 
   it('falls back to default message when error message missing', async () => {

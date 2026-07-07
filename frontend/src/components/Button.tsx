@@ -26,6 +26,7 @@ export function CalcButton({
   return (
     <button
       type="button"
+      data-variant={variant}
       className={`${styles[variant]} ${spanClass} rounded-xl h-14 sm:h-16 text-lg sm:text-xl font-display font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed select-none ${className}`}
       {...rest}
     >

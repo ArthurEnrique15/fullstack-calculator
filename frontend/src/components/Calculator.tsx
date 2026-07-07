@@ -11,7 +11,7 @@ interface Props {
 
 export function Calculator({ client }: Props = {}) {
   const api = useCalculator(client)
-  useKeyboardControls(api)
+  useKeyboardControls(api.controls)
   const { state } = api
 
   return (

@@ -75,6 +75,45 @@ describe('<Calculator />', () => {
     expect(msg.className).toMatch(/break-words/)
   })
 
+  it('disables every button except AC while an error is showing', async () => {
+    const client = stubClient(() => ({
+      ok: false,
+      code: 'DIVISION_BY_ZERO',
+      message: 'cannot divide by zero',
+    }))
+    render(<Calculator client={client} />)
+    await press('1')
+    await press('divide')
+    await press('0')
+    await press('equals')
+
+    const ac = screen.getByRole('button', { name: 'clear' })
+    expect(ac).not.toBeDisabled()
+
+    const otherLabels = [
+      'square root',
+      'power',
+      'divide',
+      'multiply',
+      'subtract',
+      'add',
+      'percentage',
+      'equals',
+      'decimal',
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    ]
+    for (const name of otherLabels) {
+      expect(screen.getByRole('button', { name })).toBeDisabled()
+    }
+
+    // AC still works and re-enables the grid.
+    await press('clear')
+    expect(screen.queryByTestId('error-banner')).toBeNull()
+    for (const name of otherLabels) {
+      expect(screen.getByRole('button', { name })).not.toBeDisabled()
+    }
+  })
+
   it('AC clears the error banner and resets the display', async () => {
     const client = stubClient(() => ({
       ok: false,

@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { CalcButton } from '../components/Button'
 
 describe('<CalcButton />', () => {
-  it('renders each variant', () => {
+  it('tags each variant with data-variant', () => {
     render(
       <>
         <CalcButton>digit</CalcButton>
@@ -12,10 +12,10 @@ describe('<CalcButton />', () => {
         <CalcButton variant="clear">clear</CalcButton>
       </>,
     )
-    expect(screen.getByText('digit').className).toMatch(/bg-slate-800/)
-    expect(screen.getByText('op').className).toMatch(/text-cyan-300/)
-    expect(screen.getByText('accent').className).toMatch(/bg-cyan-500/)
-    expect(screen.getByText('clear').className).toMatch(/bg-rose-500/)
+    expect(screen.getByText('digit')).toHaveAttribute('data-variant', 'digit')
+    expect(screen.getByText('op')).toHaveAttribute('data-variant', 'operator')
+    expect(screen.getByText('accent')).toHaveAttribute('data-variant', 'accent')
+    expect(screen.getByText('clear')).toHaveAttribute('data-variant', 'clear')
   })
 
   it('supports col-span 2', () => {
@@ -23,7 +23,7 @@ describe('<CalcButton />', () => {
     expect(screen.getByText('wide').className).toMatch(/col-span-2/)
   })
 
-  it('forwards extra className and props', () => {
+  it('forwards extra className, aria-label, and disabled state', () => {
     render(
       <CalcButton className="extra" aria-label="x" disabled>
         z

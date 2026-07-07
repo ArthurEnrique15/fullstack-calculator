@@ -1,7 +1,8 @@
 import type { CalcResult, ErrorCode, Operation } from './types'
 import { isUnary } from './types'
 
-const KNOWN_CODES: readonly ErrorCode[] = [
+// Codes the server can send us (per docs/API-CONTRACT.md).
+export const SERVER_CODES = [
   'INVALID_JSON',
   'UNKNOWN_OPERATION',
   'MISSING_OPERAND',
@@ -9,12 +10,13 @@ const KNOWN_CODES: readonly ErrorCode[] = [
   'DIVISION_BY_ZERO',
   'NEGATIVE_SQRT',
   'NON_FINITE_RESULT',
-  'NETWORK_ERROR',
-  'UNKNOWN',
-]
+] as const satisfies readonly ErrorCode[]
+
+// Codes only the client mints (never seen on the wire).
+export const CLIENT_CODES = ['NETWORK_ERROR', 'UNKNOWN'] as const satisfies readonly ErrorCode[]
 
 function toErrorCode(raw: unknown): ErrorCode {
-  return typeof raw === 'string' && (KNOWN_CODES as readonly string[]).includes(raw)
+  return typeof raw === 'string' && (SERVER_CODES as readonly string[]).includes(raw)
     ? (raw as ErrorCode)
     : 'UNKNOWN'
 }
@@ -27,7 +29,12 @@ export const CALCULATE_ENDPOINT = '/api/v1/calculate'
 
 export async function calculate(op: Operation, a: number, b?: number): Promise<CalcResult> {
   const body: Record<string, unknown> = { operation: op, a }
-  if (!isUnary(op)) body.b = b ?? 0
+  if (!isUnary(op)) {
+    if (b === undefined) {
+      throw new TypeError('operand b required for binary op')
+    }
+    body.b = b
+  }
 
   let res: Response
   try {

@@ -34,8 +34,7 @@ export type Action =
 
 export function formatNumber(n: number): string {
   if (!Number.isFinite(n)) return 'Error'
-  const s = String(n)
-  return s
+  return String(n)
 }
 
 export function reducer(state: CalcState, action: Action): CalcState {
@@ -50,7 +49,8 @@ export function reducer(state: CalcState, action: Action): CalcState {
       if (state.display === '0') {
         return { ...state, display: d }
       }
-      if (state.display.replace('-', '').length >= MAX_INPUT_LEN) return state
+      // Invariant: user-typed display is unsigned — DIGIT/DECIMAL only append.
+      if (state.display.length >= MAX_INPUT_LEN) return state
       return { ...state, display: state.display + d }
     }
 
