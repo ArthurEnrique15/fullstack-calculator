@@ -108,6 +108,8 @@ Backend and Frontend are independent (both depend only on the frozen contract) â
 
 - [x] Grill design decisions (grill-with-docs)
 - [x] CLAUDE.md, CONTEXT.md, API-CONTRACT, ADRs, ROADMAP
-- [ ] Recruit Agent 1 (Backend) + Agent 2 (Frontend) in parallel via Maestro
-- [ ] Recruit Agent 3 (Integration & Docs)
-- [ ] Verify deliverables against contract; keep manager context uncompacted
+- [x] Recruit Agent 1 (Backend) + Agent 2 (Frontend) in parallel via Maestro
+- [x] Recruit Agent 3 (Integration & Docs)
+- [x] Verify deliverables against contract (smoke 16/16 in Docker)
+- [x] Push to GitHub in separated commits (docs / backend / frontend)
+- [x] Code review pass (reviewer agent) + route fixes to owners

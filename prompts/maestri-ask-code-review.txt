@@ -1,0 +1,21 @@
+maestri ask "Argus" (code reviewer, read-only):
+
+Perform a complete code review of the Fullstack Calculator, judged against the
+task goals: clean design, maintainable code, testable architecture. Read the docs
+first (CLAUDE.md, docs/API-CONTRACT.md, docs/ROADMAP.md, docs/adr/) so you don't
+flag intentional documented decisions. Review backend/, frontend/, and
+integration/docs. Output a prioritized report grouped by owner (Bedrock / Prism /
+Lattice) with severity-tagged findings, most severe first, each with file:line,
+the problem, why it hurts the three goals, and a concrete fix. Judge test QUALITY,
+not just presence. Be honest — call clean code clean, label subjective preferences
+as such, and flag any design-level questions for the manager to grill rather than
+deciding them.
+
+---
+
+Follow-up fix dispatch (maestri ask --batch to Bedrock / Prism / Lattice) applied
+the review findings. Manager-decided design questions: (1) api.ts missing binary
+operand -> THROW; (2) backend writeMathError unknown -> FAIL LOUD (500); (3)
+frontend error state -> DISABLE all buttons except AC; (4) docker host port ->
+KEEP 8080. Full fix instructions per owner are the batch message sent after the
+review; the MAJOR item was the smoke.sh python fallback never reading the body.

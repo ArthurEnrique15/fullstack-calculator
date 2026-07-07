@@ -76,6 +76,8 @@ docker compose up --build
 
 Then open http://localhost:8080. The frontend container serves the built SPA and reverse-proxies `/api/*` to the backend container over Docker's default network. Stop with `Ctrl+C` or `docker compose down`.
 
+> **Port conflict:** the local backend (`go run .`) and the Dockerised stack both bind host `:8080`. Do not run them at the same time — stop one before starting the other (`docker compose down`, or kill the `go run` process).
+
 To rebuild after changes:
 
 ```bash
@@ -201,7 +203,7 @@ curl -s -o /dev/stderr -w '%{http_code}\n' \
 curl -s -o /dev/stderr -w '%{http_code}\n' \
   http://localhost:8080/api/v1/calculate \
   -H 'content-type: application/json' \
-  -d '{"operation":"power","a":10,"b":1000}'
+  -d '{"operation":"power","a":10,"b":400}'
 # → 422  {"error":{"code":"NON_FINITE_RESULT","message":"..."}}
 ```
 

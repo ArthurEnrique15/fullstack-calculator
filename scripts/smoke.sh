@@ -23,30 +23,60 @@ fail=0
 failed_cases=()
 
 # --- JSON field extractor: prefer jq, fall back to python3 --------------------
-if command -v jq >/dev/null 2>&1; then
-  json_get() { jq -r "$2 // empty" <<<"$1"; }
+# Force the fallback path by exporting SMOKE_FORCE_PYTHON=1 (used by CI to verify
+# that both extractors behave identically).
+if [[ "${SMOKE_FORCE_PYTHON:-0}" != "1" ]] && command -v jq >/dev/null 2>&1; then
+  EXTRACTOR="jq"
+  # 2>/dev/null: swallow jq's parse-error chatter on the bad-JSON self-test
+  # case; a real assertion failure surfaces via the empty return value.
+  json_get() { jq -r "$2 // empty" <<<"$1" 2>/dev/null; }
 else
+  EXTRACTOR="python3"
   json_get() {
-    python3 - "$2" <<PY
+    # Body is on stdin (piped), path is argv[1]. This is the fix for the
+    # earlier bug where a here-doc *was* stdin, so sys.stdin.read() returned
+    # the Python source instead of the response body.
+    printf '%s' "$1" | python3 -c '
 import json, sys
-path = sys.argv[1].lstrip('.')
+path = sys.argv[1].lstrip(".")
 try:
     data = json.loads(sys.stdin.read())
 except Exception:
     sys.exit(0)
 cur = data
-for part in path.split('.'):
-    if not part:
+for p in path.split("."):
+    if not p:
         continue
-    if isinstance(cur, dict) and part in cur:
-        cur = cur[part]
+    if isinstance(cur, dict) and p in cur:
+        cur = cur[p]
     else:
         sys.exit(0)
 print(cur if not isinstance(cur, (dict, list)) else json.dumps(cur))
-PY
-    printf '' <<<"$1" >/dev/null
+' "$2"
   }
 fi
+
+# --- self-test the extractor --------------------------------------------------
+# A broken json_get returns "" for every path, and every assert would then
+# either short-circuit on the status check or fall through as "want=X got=".
+# We fail loudly here BEFORE running any server-backed case so a silent
+# extractor regression can never masquerade as a green run.
+_selftest() {
+  local body='{"result":42,"operation":"add","error":{"code":"OK"}}'
+  local got
+  got="$(json_get "$body" ".result")"
+  [[ "$got" == "42" ]] || { echo "SELF-TEST FAIL ($EXTRACTOR): .result got='$got' want='42'"; exit 2; }
+  got="$(json_get "$body" ".operation")"
+  [[ "$got" == "add" ]] || { echo "SELF-TEST FAIL ($EXTRACTOR): .operation got='$got' want='add'"; exit 2; }
+  got="$(json_get "$body" ".error.code")"
+  [[ "$got" == "OK" ]] || { echo "SELF-TEST FAIL ($EXTRACTOR): .error.code got='$got' want='OK'"; exit 2; }
+  got="$(json_get "$body" ".missing")"
+  [[ -z "$got" ]] || { echo "SELF-TEST FAIL ($EXTRACTOR): .missing got='$got' want=''"; exit 2; }
+  got="$(json_get 'not json at all' ".result")"
+  [[ -z "$got" ]] || { echo "SELF-TEST FAIL ($EXTRACTOR): bad-json got='$got' want=''"; exit 2; }
+}
+_selftest
+echo "Extractor: $EXTRACTOR (self-test OK)"
 
 # --- one HTTP round-trip, capture status + body -------------------------------
 # $1 = method, $2 = url, $3 = body (may be empty), $4 = content-type override

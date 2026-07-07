@@ -73,6 +73,14 @@ Error code catalogue (extend as needed, keep stable):
 | `DIVISION_BY_ZERO`   | 422    | divide with b = 0                       |
 | `NEGATIVE_SQRT`      | 422    | sqrt of a negative number               |
 | `NON_FINITE_RESULT`  | 422    | result is NaN or ±Infinity              |
+| `INTERNAL_ERROR`     | 500    | unexpected/unclassified server error    |
+
+### 500 — Internal Error
+
+Defensive catch-all. The handler maps each known math error to an explicit `422`
+code; anything unrecognized fails loud as `500 INTERNAL_ERROR` (and is logged
+server-side) rather than being silently relabeled. Not reachable in normal
+operation — it is a bug signal, not a math-error case.
 
 ## Health
 

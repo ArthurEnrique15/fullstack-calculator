@@ -1,4 +1,4 @@
-# Fullstack calculator — DRAFT (finalize after backend/frontend Dockerfiles land).
+# Fullstack calculator.
 #
 # `docker compose up` brings the full app up:
 #   - backend:  Go REST service, listens on :8080 inside the compose network.

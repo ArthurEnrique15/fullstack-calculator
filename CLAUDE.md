@@ -68,8 +68,9 @@ fullstack-calculator/
 ## Status
 
 - [x] Workspace guide (this file)
-- [ ] Implementation roadmap (in progress)
-- [ ] Backend
-- [ ] Frontend
-- [ ] Docs / README
-- [ ] Docker (optional)
+- [x] Implementation roadmap
+- [x] Backend (Go, 100% coverage)
+- [x] Frontend (React + TS, keyboard support, 100% coverage)
+- [x] Docs / README
+- [x] Docker (docker-compose, full stack)
+- [x] Code review pass (findings routed to owners)
