@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"math"
 	"net/http"
 	"strings"
@@ -25,6 +26,10 @@ const (
 	CodeDivisionByZero   = "DIVISION_BY_ZERO"
 	CodeNegativeSqrt     = "NEGATIVE_SQRT"
 	CodeNonFiniteResult  = "NON_FINITE_RESULT"
+	// CodeInternalError is not part of the frozen contract; it is only emitted
+	// when the calculator layer surfaces an error the handler does not
+	// recognize, which indicates a bug rather than a user-facing math case.
+	CodeInternalError = "INTERNAL_ERROR"
 )
 
 // calcRequest is the parsed shape. json.RawMessage lets the parser
@@ -85,7 +90,7 @@ func Calculate(w http.ResponseWriter, r *http.Request) {
 
 	var b float64
 	var haveB bool
-	if len(req.B) > 0 && string(req.B) != "null" {
+	if hasValue(req.B) {
 		v, err := parseOperand("b", req.B)
 		if err != nil {
 			writeOperandError(w, err)
@@ -168,8 +173,13 @@ func writeMathError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusUnprocessableEntity, CodeDivisionByZero, "cannot divide by zero")
 	case errors.Is(err, calculator.ErrNegativeSqrt):
 		writeError(w, http.StatusUnprocessableEntity, CodeNegativeSqrt, "cannot take square root of a negative number")
-	default: // calculator.ErrNonFiniteResult — the only other math error the calculator can return once the operation is known.
+	case errors.Is(err, calculator.ErrNonFiniteResult):
 		writeError(w, http.StatusUnprocessableEntity, CodeNonFiniteResult, "result is not a finite number")
+	default:
+		// Unknown calculator error — a bug, not a user math case. Log loudly
+		// and return 500 rather than silently relabeling it as NON_FINITE_RESULT.
+		log.Printf("calculator returned unknown error: %v", err)
+		writeError(w, http.StatusInternalServerError, CodeInternalError, "internal error")
 	}
 }
 
@@ -180,7 +190,16 @@ func writeError(w http.ResponseWriter, status int, code, msg string) {
 func writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
+	// Encode error intentionally ignored: every call site passes a known-encodable
+	// struct (successResp / errorResp / static map), so failure can only be a
+	// downstream write error we cannot recover from after WriteHeader.
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+// hasValue reports whether a json.RawMessage carries an actual JSON value
+// (i.e. the field was present in the request body and not explicitly null).
+func hasValue(raw json.RawMessage) bool {
+	return len(raw) > 0 && string(raw) != "null"
 }
 
 func hasJSONContentType(r *http.Request) bool {

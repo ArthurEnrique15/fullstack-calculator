@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -200,6 +201,29 @@ func TestCalculate_422_NonFinite(t *testing.T) {
 	e := decodeError(t, rr, http.StatusUnprocessableEntity)
 	if e.Code != CodeNonFiniteResult {
 		t.Fatalf("code = %q", e.Code)
+	}
+}
+
+// Fail-loud contract for writeMathError: a calculator error the handler does
+// not recognize surfaces as HTTP 500 + INTERNAL_ERROR, never as a relabeled
+// 422 that would deceive the client.
+func TestWriteMathError_UnknownErrorFailsLoud(t *testing.T) {
+	// Silence the log.Printf we intentionally emit on this path so it does
+	// not clutter test output; restore afterwards.
+	origOut := log.Writer()
+	origFlags := log.Flags()
+	log.SetOutput(io.Discard)
+	log.SetFlags(0)
+	defer func() {
+		log.SetOutput(origOut)
+		log.SetFlags(origFlags)
+	}()
+
+	rr := httptest.NewRecorder()
+	writeMathError(rr, errors.New("some unexpected calculator failure"))
+	e := decodeError(t, rr, http.StatusInternalServerError)
+	if e.Code != CodeInternalError {
+		t.Fatalf("code = %q, want %q", e.Code, CodeInternalError)
 	}
 }
 
